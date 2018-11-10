@@ -4,6 +4,8 @@
 #include <QMainWindow>
 #include <QUdpSocket>
 
+#define Ttime 1
+
 namespace Ui {
 class MainWindow;
 }
@@ -18,7 +20,9 @@ public:
 
 private slots:
     void GetMessage();
-    void SendMessage();
+    void SendMessage(int);
+
+    void on_pushButton_clicked();
 
 private:
     Ui::MainWindow *ui;

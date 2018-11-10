@@ -32,10 +32,20 @@ void MainWindow::GetMessage()
     QDataStream in(&data,QIODevice::ReadOnly);
     in>>time>>test;
     ui->lineEdit_2->setText(test);
-    ui->lineEdit->setText(time.date().toString());
+    ui->lineEdit->setText(time.time().toString());
 }
 
-void MainWindow::SendMessage()
+void MainWindow::SendMessage(int type)
 {
+    QByteArray data;
+    QDataStream out(&data, QIODevice::WriteOnly);
+    QString test("有内鬼");
+    out<<type<<test;
+    s_UdpSocket.writeDatagram(data,QHostAddress::LocalHost, 8081);
+}
 
+void MainWindow::on_pushButton_clicked()
+{
+    //获取时间
+    this->SendMessage(Ttime);
 }
