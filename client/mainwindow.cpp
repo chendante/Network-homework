@@ -10,13 +10,19 @@
 #include <QJsonDocument>
 #include <QJsonValue>
 #include <QJsonObject>
+#include <QTreeWidgetItem>
 
 MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),
     ui(new Ui::MainWindow)
 {
     ui->setupUi(this);
-
+    QStringList headerList;
+    headerList.append(tr("文件名"));
+    headerList.append(tr("创建时间"));
+    headerList.append(tr("文件大小"));
+    headerList.append(tr("文件路径"));
+    ui->treeWidget->setHeaderLabels(headerList);
     g_UdpSocket.bind(8080);
     connect(&g_UdpSocket,SIGNAL(readyRead()),SLOT(GetMessage()));
 }
@@ -43,6 +49,7 @@ void MainWindow::GetMessage()
         in>>time>>test;
         ui->lineEdit_2->setText(test);
         ui->lineEdit->setText(time.time().toString());
+        ui->lineEdit_3->setText(time.date().toString());
     }
     else if (Type == Tdir)
     {
@@ -55,8 +62,18 @@ void MainWindow::GetMessage()
 
         qDebug()<<readDoc.toJson();
         QJsonArray array_json = readDoc.array();
-        QJsonObject file_json(array_json.at(0).toObject());
-        qDebug()<<file_json.value("name").toString();
+        for(int i = 0; i < array_json.size(); i++)
+        {
+            QJsonObject file_json(array_json.at(i).toObject());
+            QTreeWidgetItem *newItem = new QTreeWidgetItem();
+            newItem->setText(0,file_json.value("name").toString());
+            newItem->setText(1,file_json.value("time").toString());
+            newItem->setText(2,file_json.value("size").toString());
+            newItem->setText(3,file_json.value("path").toString());
+            ui->treeWidget->addTopLevelItem(newItem);
+        }
+//        qDebug()<<file_json.value("name").toString();
+
     }
 
 }
