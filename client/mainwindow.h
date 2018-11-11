@@ -5,6 +5,7 @@
 #include <QJsonArray>
 #include <QJsonObject>
 #include <QTcpSocket>
+#include <QHostAddress>
 
 #define Ttime 1
 #define Tdir  2

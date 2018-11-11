@@ -27,8 +27,6 @@ MainWindow::MainWindow(QWidget *parent) :
     headerList.append(tr("文件大小"));
     headerList.append(tr("文件路径"));
     ui->treeWidget->setHeaderLabels(headerList);
-    g_UdpSocket.bind(8080);
-    connect(&g_UdpSocket,SIGNAL(readyRead()),SLOT(GetMessage()));
 }
 
 MainWindow::~MainWindow()
