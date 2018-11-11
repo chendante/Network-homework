@@ -4,6 +4,9 @@
 #include <QMainWindow>
 #include <QUdpSocket>
 #include <QTimer>
+#include <QDir>
+#include <QFileInfoList>
+#include <QFileInfo>
 
 namespace Ui {
 class MainWindow;
@@ -20,11 +23,11 @@ public:
 private slots:
     void SendMessage();
     void GetMessage();
+    void SendDir();
     
 private:
     Ui::MainWindow *ui;
     QUdpSocket m_UdpSocket,g_UdpSocket;
-    QTimer m_timer;
 };
 
 #endif // MAINWINDOW_H
