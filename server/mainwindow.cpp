@@ -29,7 +29,7 @@ void MainWindow::SendMessage()
 {
     QByteArray data;
     QDataStream out(&data, QIODevice::WriteOnly);
-    QString test("有内鬼");
+    QString test("使用UDP服务");
     out<<1<<QDateTime::currentDateTime()<<test;
     m_UdpSocket.writeDatagram(data,QHostAddress::LocalHost, 8080);
 }
