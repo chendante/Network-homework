@@ -6,6 +6,7 @@
 #include <QFileInfoList>
 #include <QJsonArray>
 #include <QJsonObject>
+#include <QTcpSocket>
 
 #define Ttime 1
 #define Tdir  2
@@ -25,6 +26,7 @@ public:
 private slots:
     void GetMessage();
     void SendMessage(int);
+    void connectServer();
 
     void on_pushButton_clicked();
 
@@ -33,6 +35,7 @@ private slots:
 private:
     Ui::MainWindow *ui;
     QUdpSocket g_UdpSocket,s_UdpSocket;
+    QTcpSocket *tcpSocket;
 };
 
 #endif // MAINWINDOW_H

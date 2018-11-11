@@ -17,6 +17,11 @@ MainWindow::MainWindow(QWidget *parent) :
     ui(new Ui::MainWindow)
 {
     ui->setupUi(this);
+
+    tcpSocket = new QTcpSocket(this);
+    this->connectServer();
+    connect(tcpSocket,QTcpSocket::readyRead,this,MainWindow::GetMessage);
+
     QStringList headerList;
     headerList.append(tr("文件名"));
     headerList.append(tr("创建时间"));
@@ -32,13 +37,20 @@ MainWindow::~MainWindow()
     delete ui;
 }
 
+void MainWindow::connectServer()
+{
+    tcpSocket->abort();
+    tcpSocket->connectToHost(QHostAddress::LocalHost,8081);
+}
+
 void MainWindow::GetMessage()
 {
-    QByteArray data;
-    while (g_UdpSocket.hasPendingDatagrams()) {
-        data.resize(g_UdpSocket.pendingDatagramSize());
-        g_UdpSocket.readDatagram(data.data(), data.size());
-    }
+    QByteArray data = tcpSocket->readAll();
+    qDebug()<<data;
+//    while (g_UdpSocket.hasPendingDatagrams()) {
+//        data.resize(g_UdpSocket.pendingDatagramSize());
+//        g_UdpSocket.readDatagram(data.data(), data.size());
+//    }
     QDateTime time;
     QString test;
     int Type;
@@ -72,10 +84,7 @@ void MainWindow::GetMessage()
             newItem->setText(3,file_json.value("path").toString());
             ui->treeWidget->addTopLevelItem(newItem);
         }
-//        qDebug()<<file_json.value("name").toString();
-
     }
-
 }
 
 void MainWindow::SendMessage(int type)
@@ -85,16 +94,19 @@ void MainWindow::SendMessage(int type)
     QString test("有内鬼");
     qDebug()<<type;
     out<<type<<test;
-    s_UdpSocket.writeDatagram(data,QHostAddress::LocalHost, 8081);
+//    s_UdpSocket.writeDatagram(data,QHostAddress::LocalHost, 8081);
+    tcpSocket->write(data);
 }
 
 void MainWindow::on_pushButton_clicked()
 {
+    this->connectServer();
     //获取时间
     this->SendMessage(Ttime);
 }
 
 void MainWindow::on_pushButton_2_clicked()
 {
+    this->connectServer();
     this->SendMessage(Tdir);
 }

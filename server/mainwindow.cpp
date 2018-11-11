@@ -9,12 +9,21 @@
 #include <QJsonArray>
 #include <QJsonDocument>
 #include <QJsonValue>
+#include <QTcpSocket>
 
 MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),
     ui(new Ui::MainWindow)
 {
     ui->setupUi(this);
+
+    tcpServer = new QTcpServer(this);
+    if(!tcpServer->listen(QHostAddress::Any,8081))
+    {
+        qDebug()<<tcpServer->errorString();
+        close();
+    }
+    connect(tcpServer,&QTcpServer::newConnection,this,&MainWindow::NewConnect);
 
     g_UdpSocket.bind(8081);
     connect(&g_UdpSocket,SIGNAL(readyRead()),SLOT(GetMessage()));
@@ -29,9 +38,9 @@ void MainWindow::SendMessage()
 {
     QByteArray data;
     QDataStream out(&data, QIODevice::WriteOnly);
-    QString test("有内鬼");
+    QString test("使用TCP协议");
     out<<1<<QDateTime::currentDateTime()<<test;
-    m_UdpSocket.writeDatagram(data,QHostAddress::LocalHost, 8080);
+    tcpSocket->write(data);
 }
 
 void MainWindow::SendDir()
@@ -58,16 +67,17 @@ void MainWindow::SendDir()
     QJsonDocument json_doc;
     json_doc.setArray(json_array);
     out<<2<<json_doc.toJson(QJsonDocument::Compact);
-    m_UdpSocket.writeDatagram(data,QHostAddress::LocalHost, 8080);
+    tcpSocket->write(data);
 }
 
 void MainWindow::GetMessage()
 {
-    QByteArray data;
-    while (g_UdpSocket.hasPendingDatagrams()) {
-        data.resize(g_UdpSocket.pendingDatagramSize());
-        g_UdpSocket.readDatagram(data.data(), data.size());
-    }
+    QByteArray data = tcpSocket->readAll();
+    qDebug()<<data;
+//    while (g_UdpSocket.hasPendingDatagrams()) {
+//        data.resize(g_UdpSocket.pendingDatagramSize());
+//        g_UdpSocket.readDatagram(data.data(), data.size());
+//    }
     int Type;
     QString test;
     QDataStream in(&data,QIODevice::ReadOnly);
@@ -81,4 +91,10 @@ void MainWindow::GetMessage()
         this->SendDir();
     }
     qDebug()<<test;
+}
+
+void MainWindow::NewConnect()
+{
+    tcpSocket = tcpServer->nextPendingConnection();
+    connect(tcpSocket,SIGNAL(readyRead()),this,SLOT(GetMessage()));
 }

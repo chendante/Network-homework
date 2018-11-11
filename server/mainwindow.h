@@ -7,6 +7,7 @@
 #include <QDir>
 #include <QFileInfoList>
 #include <QFileInfo>
+#include <QTcpServer>
 
 namespace Ui {
 class MainWindow;
@@ -21,6 +22,7 @@ public:
     ~MainWindow();
 
 private slots:
+    void NewConnect();
     void SendMessage();
     void GetMessage();
     void SendDir();
@@ -28,6 +30,8 @@ private slots:
 private:
     Ui::MainWindow *ui;
     QUdpSocket m_UdpSocket,g_UdpSocket;
+    QTcpServer *tcpServer;
+    QTcpSocket *tcpSocket;
 };
 
 #endif // MAINWINDOW_H
