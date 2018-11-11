@@ -2,8 +2,6 @@
 #define MAINWINDOW_H
 
 #include <QMainWindow>
-#include <QUdpSocket>
-#include <QFileInfoList>
 #include <QJsonArray>
 #include <QJsonObject>
 #include <QTcpSocket>
@@ -34,7 +32,6 @@ private slots:
 
 private:
     Ui::MainWindow *ui;
-    QUdpSocket g_UdpSocket,s_UdpSocket;
     QTcpSocket *tcpSocket;
 };
 

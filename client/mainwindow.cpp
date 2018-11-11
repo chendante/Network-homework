@@ -5,7 +5,6 @@
 #include <QDateTime>
 #include <QDebug>
 #include <QDir>
-#include <QFileInfoList>
 #include <QJsonArray>
 #include <QJsonDocument>
 #include <QJsonValue>
@@ -47,10 +46,6 @@ void MainWindow::GetMessage()
 {
     QByteArray data = tcpSocket->readAll();
     qDebug()<<data;
-//    while (g_UdpSocket.hasPendingDatagrams()) {
-//        data.resize(g_UdpSocket.pendingDatagramSize());
-//        g_UdpSocket.readDatagram(data.data(), data.size());
-//    }
     QDateTime time;
     QString test;
     int Type;
