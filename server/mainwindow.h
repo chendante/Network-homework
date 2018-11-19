@@ -2,7 +2,6 @@
 #define MAINWINDOW_H
 
 #include <QMainWindow>
-#include <QUdpSocket>
 #include <QTimer>
 #include <QDir>
 #include <QFileInfoList>
@@ -23,15 +22,13 @@ public:
 
 private slots:
     void NewConnect();
-    void SendMessage();
-    void GetMessage();
-    void SendDir();
+//    void SendMessage();
+    void GetMessage(QTcpSocket*);
+//    void SendDir();
     
 private:
     Ui::MainWindow *ui;
-    QUdpSocket m_UdpSocket,g_UdpSocket;
     QTcpServer *tcpServer;
-    QTcpSocket *tcpSocket;
 };
 
 #endif // MAINWINDOW_H
