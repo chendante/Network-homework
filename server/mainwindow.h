@@ -29,7 +29,6 @@ private slots:
     
 private:
     Ui::MainWindow *ui;
-    QUdpSocket m_UdpSocket,g_UdpSocket;
     QTcpServer *tcpServer;
     QTcpSocket *tcpSocket;
 };

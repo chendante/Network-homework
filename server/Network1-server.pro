@@ -29,7 +29,9 @@ SOURCES += \
         mainwindow.cpp
 
 HEADERS += \
-        mainwindow.h
+        mainwindow.h \
+    myserver.h \
+    mytcpsocket.h
 
 FORMS += \
         mainwindow.ui
