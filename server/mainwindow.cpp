@@ -16,19 +16,24 @@ MainWindow::MainWindow(QWidget *parent) :
     ui(new Ui::MainWindow)
 {
     ui->setupUi(this);
-
-    tcpServer = new QTcpServer(this);
-    if(!tcpServer->listen(QHostAddress::Any,25))
-    {
-        qDebug()<<tcpServer->errorString();
-        close();
-    }
-    connect(tcpServer,&QTcpServer::newConnection,this,&MainWindow::NewConnect);
+    m_server = new myserver(this);
+//    tcpServer = new QTcpServer(this);
+//    if(!tcpServer->listen(QHostAddress::Any,24))
+//    {
+//        qDebug()<<tcpServer->errorString();
+//        close();
+//    }
+//    connect(tcpServer,&QTcpServer::newConnection,this,&MainWindow::NewConnect);
 }
 
 MainWindow::~MainWindow()
 {
     delete ui;
+}
+
+void MainWindow::addString(QString str)
+{
+    qDebug()<<str;
 }
 
 void MainWindow::SendMessage()

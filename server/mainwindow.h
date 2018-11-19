@@ -8,6 +8,9 @@
 #include <QFileInfoList>
 #include <QFileInfo>
 #include <QTcpServer>
+#include <QString>
+#include "myserver.h"
+#include "mytcpsocket.h"
 
 namespace Ui {
 class MainWindow;
@@ -26,11 +29,12 @@ private slots:
     void SendMessage();
     void GetMessage();
     void SendDir();
+
+    void addString(QString);
     
 private:
     Ui::MainWindow *ui;
     QTcpServer *tcpServer;
-    QTcpSocket *tcpSocket;
 };
 
 #endif // MAINWINDOW_H

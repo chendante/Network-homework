@@ -10,8 +10,9 @@ class myserver:public QTcpServer
 
 public:
     myserver(QWidget *parent);
-protected:
-    virtual void incomingConnection(qintptr socketDescriptor);
-}
+    QWidget *pa;
+//protected:
+//    virtual void incomingConnection(qintptr socketDescriptor);
+};
 
 #endif // MYSERVER_H
