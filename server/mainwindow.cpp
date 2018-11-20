@@ -10,6 +10,8 @@
 #include <QJsonDocument>
 #include <QJsonValue>
 #include <QTcpSocket>
+#include <QThread>
+#include "mytcpsocket.h"
 
 MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),
@@ -67,9 +69,9 @@ MainWindow::~MainWindow()
 //    tcpSocket->write(data);
 //}
 
-void MainWindow::GetMessage(QTcpSocket *socket)
+void MainWindow::GetMessage(QString str)
 {
-    qDebug()<<socket->peerAddress();
+    qDebug()<<"11"<<str;
 //    QByteArray data = tcpSocket->readAll();
 //    qDebug()<<data;
 //    int Type;
@@ -89,6 +91,9 @@ void MainWindow::GetMessage(QTcpSocket *socket)
 
 void MainWindow::NewConnect()
 {
-    QTcpSocket* tcpSocket = tcpServer->nextPendingConnection();
-    connect(tcpSocket,SIGNAL(readyRead()),this,SLOT(GetMessage(tcpSocket)));
+//    QTcpSocket* tcpSocket = new QTcpSocket(tcpServer->nextPendingConnection());
+//    tcpSocket->socketDescriptor();
+
+    mytcpsocket* tcp = new mytcpsocket(tcpServer->nextPendingConnection());
+    connect(tcp,SIGNAL(sendString(QString)),this,SLOT(GetMessage(QString)));
 }

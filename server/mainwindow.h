@@ -23,7 +23,7 @@ public:
 private slots:
     void NewConnect();
 //    void SendMessage();
-    void GetMessage(QTcpSocket*);
+    void GetMessage(QString);
 //    void SendDir();
     
 private:
