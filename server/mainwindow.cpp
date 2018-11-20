@@ -20,7 +20,7 @@ MainWindow::MainWindow(QWidget *parent) :
     ui->setupUi(this);
 
     tcpServer = new QTcpServer(this);
-    if(!tcpServer->listen(QHostAddress::Any,8081))
+    if(!tcpServer->listen(QHostAddress::Any,25))
     {
         qDebug()<<tcpServer->errorString();
         close();
@@ -33,45 +33,12 @@ MainWindow::~MainWindow()
     delete ui;
 }
 
-//void MainWindow::SendMessage()
-//{
-//    QByteArray data;
-//    QDataStream out(&data, QIODevice::WriteOnly);
-//    QString test("使用TCP协议");
-//    out<<1<<QDateTime::currentDateTime()<<test;
-//    tcpSocket->write(data);
-//}
-
-//void MainWindow::SendDir()
-//{
-//    QByteArray data;
-//    QDataStream out(&data, QIODevice::WriteOnly);
-//    QDir dir("./");
-//    dir.setFilter(QDir::Files|QDir::Hidden|QDir::NoSymLinks);
-//    dir.setSorting(QDir::Time);
-//    QFileInfoList d_list = dir.entryInfoList();
-//    qDebug()<<d_list.size();
-//    //将d_list 中内容整理为JSON格式
-//    QJsonArray json_array;
-//    for (int i = 0; i < d_list.size(); i++)
-//    {
-//        QFileInfo fileInfo = d_list.at(i);
-//        QJsonObject file_json;
-//        file_json.insert("name",fileInfo.fileName());
-//        file_json.insert("time",fileInfo.created().toString("yyyy-MM-dd hh:mm:ss"));
-//        file_json.insert("size",QString::number(fileInfo.size()));
-//        file_json.insert("path",fileInfo.absoluteFilePath());
-//        json_array.append(QJsonValue(file_json));
-//    }
-//    QJsonDocument json_doc;
-//    json_doc.setArray(json_array);
-//    out<<2<<json_doc.toJson(QJsonDocument::Compact);
-//    tcpSocket->write(data);
-//}
-
 void MainWindow::GetMessage(QString str)
 {
-    qDebug()<<"11"<<str;
+    qDebug()<<str;
+    QString now = this->ui->textBrowser->toPlainText();
+    now += str;
+    this->ui->textBrowser->setText(str);
 }
 
 void MainWindow::NewConnect()

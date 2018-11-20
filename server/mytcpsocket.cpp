@@ -2,6 +2,8 @@
 #include<QByteArray>
 #include<QDataStream>
 #include<QDebug>
+#include<QHostAddress>
+#include<QStringList>
 
 mytcpsocket::mytcpsocket(QTcpSocket* tcp)
 {
@@ -9,7 +11,7 @@ mytcpsocket::mytcpsocket(QTcpSocket* tcp)
     qDebug()<<"new tcp"<<endl;
     QByteArray data;
     QDataStream out(&data,QIODevice::ReadWrite);
-    QString on_connect("220 hello");
+    QString on_connect("220 simple mail server ready for mail");
     out<<on_connect;
     m_tcp->write(data);
     connect(m_tcp,SIGNAL(readyRead()),this,SLOT(getMessage()));
@@ -18,10 +20,21 @@ mytcpsocket::mytcpsocket(QTcpSocket* tcp)
 
 void mytcpsocket::getMessage()
 {
-    QByteArray data = m_tcp->readAll();
-    QDataStream in(&data,QIODevice::ReadWrite);
-    QString str;
-    int a;
-    in>>a>>str;
-    emit sendString(str);
+    QByteArray data = m_tcp->readLine();
+    qDebug()<<data;
+    QString str(data);
+    deal(str);
+}
+
+void mytcpsocket::deal(QString str)
+{
+    QStringList str_list = str.split(" ");
+    QString res;
+    if(str_list[0]=="HELO")
+    {
+        qDebug()<<111;
+        res = "250 OK ";
+        res += this->m_tcp->peerAddress().toString();
+    }
+    emit sendString(res);
 }

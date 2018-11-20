@@ -12,11 +12,13 @@ public:
     mytcpsocket(QTcpSocket*);
     QTcpSocket* m_tcp;
 
+
 signals:
     void sendString(QString);
 
 public slots:
     void getMessage();
+    void deal(QString);
 
 };
 
