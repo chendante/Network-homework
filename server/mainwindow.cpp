@@ -72,28 +72,10 @@ MainWindow::~MainWindow()
 void MainWindow::GetMessage(QString str)
 {
     qDebug()<<"11"<<str;
-//    QByteArray data = tcpSocket->readAll();
-//    qDebug()<<data;
-//    int Type;
-//    QString test;
-//    QDataStream in(&data,QIODevice::ReadOnly);
-//    in>>Type>>test;
-//    if(Type == 1)
-//    {
-//        this->SendMessage();
-//    }
-//    else if(Type == 2)
-//    {
-//        this->SendDir();
-//    }
-//    qDebug()<<test;
 }
 
 void MainWindow::NewConnect()
 {
-//    QTcpSocket* tcpSocket = new QTcpSocket(tcpServer->nextPendingConnection());
-//    tcpSocket->socketDescriptor();
-
     mytcpsocket* tcp = new mytcpsocket(tcpServer->nextPendingConnection());
     connect(tcp,SIGNAL(sendString(QString)),this,SLOT(GetMessage(QString)));
 }
