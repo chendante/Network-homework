@@ -19,11 +19,12 @@ class MainWindow : public QMainWindow
 public:
     explicit MainWindow(QWidget *parent = 0);
     ~MainWindow();
+    void GetMessage(QString);
 
 private slots:
     void NewConnect();
 //    void SendMessage();
-    void GetMessage(QString);
+
 //    void SendDir();
     
 private:

@@ -37,12 +37,13 @@ void MainWindow::GetMessage(QString str)
 {
     qDebug()<<str;
     QString now = this->ui->textBrowser->toPlainText();
-    now += str;
-    this->ui->textBrowser->setText(str);
+    now.append("\n");
+    now.append(str);
+    this->ui->textBrowser->setText(now);
 }
 
 void MainWindow::NewConnect()
 {
-    mytcpsocket* tcp = new mytcpsocket(tcpServer->nextPendingConnection());
-    connect(tcp,SIGNAL(sendString(QString)),this,SLOT(GetMessage(QString)));
+    mytcpsocket* tcp = new mytcpsocket(tcpServer->nextPendingConnection(),this);
+//    connect(tcp,SIGNAL(sendString(QString)),this,SLOT(GetMessage(QString)));
 }

@@ -4,13 +4,15 @@
 #include<QTcpSocket>
 #include<QWidget>
 #include<QString>
+#include"mainwindow.h"
 
 class mytcpsocket: public QObject
 {
     Q_OBJECT
 public:
-    mytcpsocket(QTcpSocket*);
+    mytcpsocket(QTcpSocket*,MainWindow*);
     QTcpSocket* m_tcp;
+    MainWindow *pp;
 
 
 signals:
@@ -19,6 +21,7 @@ signals:
 public slots:
     void getMessage();
     void deal(QString);
+    void reSend();
 
 };
 
