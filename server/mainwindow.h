@@ -20,9 +20,11 @@ public:
     explicit MainWindow(QWidget *parent = 0);
     ~MainWindow();
     void GetMessage(QString);
+    void GetContent(QString);
 
 private slots:
     void NewConnect();
+    void test_message();
 //    void SendMessage();
 
 //    void SendDir();
@@ -30,6 +32,7 @@ private slots:
 private:
     Ui::MainWindow *ui;
     QTcpServer *tcpServer;
+    QTcpSocket *test;
 };
 
 #endif // MAINWINDOW_H

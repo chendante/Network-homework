@@ -4,6 +4,7 @@
 #include<QTcpSocket>
 #include<QWidget>
 #include<QString>
+#include<QByteArray>
 #include"mainwindow.h"
 
 class mytcpsocket: public QObject
@@ -13,6 +14,7 @@ public:
     mytcpsocket(QTcpSocket*,MainWindow*);
     QTcpSocket* m_tcp;
     MainWindow *pp;
+    int status;
 
 
 signals:
@@ -21,6 +23,7 @@ signals:
 public slots:
     void getMessage();
     void deal(QString);
+    void dealMessage(QByteArray);
     void reSend();
 
 };
