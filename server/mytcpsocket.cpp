@@ -18,6 +18,7 @@ mytcpsocket::mytcpsocket(QTcpSocket* tcp,MainWindow *p)
     status = 1;
     m_tcp = tcp;
     this->pp = p;
+    this->pp->GetMessage("*** 建立连接\r\n");
     QByteArray data("220 ready \r\n");
     QString on_connect = data.data();
     m_tcp->write(data);
@@ -80,10 +81,11 @@ void mytcpsocket::deal(QString str)
     else if (status >= 5)
     {
         status = 6;
-        if(str.right(1) == ".")
+        qDebug()<<str.right(3);
+        if(str.right(3) == ".\r\n")
         {
             res = "250 message sent \r\n";
-            //        res = "502 message sent \r\n";
+//              res = "502 message sent \r\n";
         }
 
     }
@@ -91,7 +93,7 @@ void mytcpsocket::deal(QString str)
     {
         res = "502 error \r\n";
     }
-    this->m_tcp->write(res);
+
     if(status != 6)
     {
         str = "C: " + str;
@@ -99,6 +101,7 @@ void mytcpsocket::deal(QString str)
     }
     if(!res.isEmpty())
     {
+        this->m_tcp->write(res);
         res = "S: "+res;
         this->pp->GetMessage(res);
     }

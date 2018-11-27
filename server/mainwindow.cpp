@@ -48,6 +48,7 @@ void MainWindow::GetContent(QString str)
 
 void MainWindow::NewConnect()
 {
+    this->GetMessage("*** 收到连接请求\r\n");
     mytcpsocket* tcp = new mytcpsocket(tcpServer->nextPendingConnection(),this);
 }
 
