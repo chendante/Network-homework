@@ -80,8 +80,8 @@ void mytcpsocket::deal(QString str)
     else if (status >= 5)
     {
         status = 6;
-//        res = "250 message sent \r\n";
-        res = "502 message sent \r\n";
+        res = "250 message sent \r\n";
+//        res = "502 message sent \r\n";
     }
     else
     {
@@ -110,41 +110,49 @@ void mytcpsocket::dealContent()
 {
     QByteArray data(m_data);
     QString res;
+
+    //用正则表达式判断发送内容中是否包含图片：
     QRegExp reg_image("Content-Type: image");
+    //图片信息的起始位置：
     int pos_image = 0;
+    //匹配存在的每个图片
     while((pos_image = reg_image.indexIn(data,pos_image)) != -1)
     {
         qDebug()<<"pos_iamge: "<<pos_image;
         pos_image += reg_image.matchedLength();
         qDebug()<<"have picture";
+        //用于获取图片信息的正则表达式
         QRegExp reg_in_image("\r\n\r\n.*\r\n\r\n");
+        //正则匹配规则设置为最小匹配
+        reg_in_image.setMinimal(true);
+        //用正则表达式分析图片头的内容，获取到图片名称
         QRegExp reg_name("name=\"(.*)\"");
+        //正则匹配规则设置为最小匹配
         reg_name.setMinimal(true);
         reg_name.indexIn(data,pos_image);
         QString name = reg_name.cap(1);
-        qDebug()<<"image_name: "<<name;
+        // 图片信息的HTML代码
         QByteArray path = QString("<img src=\"%1\"/>\r\n").arg(name).toLatin1();
-        reg_in_image.setMinimal(true);
 
         QByteArray image_data;
-
-        int k = reg_in_image.indexIn(data,pos_image);
+        //图片信息字符串的起始位置和长度
+        int start = reg_in_image.indexIn(data,pos_image);
         int len = reg_in_image.matchedLength();
-        if(k != -1)
-        {
-            image_data = reg_in_image.cap().toLatin1();
-        }
-        qDebug()<<"K: "<<k;
-        qDebug()<<"len: "<<len;
-        data.replace(k,len,path);
-        image_data.replace("\r\n","");
 
+        //图片信息的内容
+        image_data = reg_in_image.cap().toLatin1();
+
+        //将图片信息那一长串字符串替换成对应HTML
+        data.replace(start,len,path);
+
+        //处理图片信息：
+        //邮件传送的图片编码方式为base64,依照这种方式将其解码
         image_data = mytcpsocket::frombase64(image_data);
+        //将信息保存为文件
         QBuffer buffer(&image_data);
         buffer.open(QIODevice::ReadOnly);
         QImageReader reader(&buffer,"PNG");
         QImage img = reader.read();
-
         if(!img.isNull())
         {
             img.save(name, "PNG", 100);
