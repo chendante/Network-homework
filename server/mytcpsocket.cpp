@@ -19,12 +19,15 @@ mytcpsocket::mytcpsocket(QTcpSocket* tcp,MainWindow *p)
     m_tcp = tcp;
     this->pp = p;
     this->pp->GetMessage("*** 建立连接\r\n");
+    //向客户端发送消息，表明连接建立成功
     QByteArray data("220 ready \r\n");
     QString on_connect = data.data();
     m_tcp->write(data);
-    connect(m_tcp,SIGNAL(readyRead()),this,SLOT(getMessage()));
+    //将发送内容展示在主窗口
     on_connect = "S: " + on_connect;
     this->pp->GetMessage(on_connect);
+    //将有消息请求的信号同getmessage()函数连接
+    connect(m_tcp,SIGNAL(readyRead()),this,SLOT(getMessage()));
 }
 
 //获取客户端发送信息
@@ -60,7 +63,10 @@ void mytcpsocket::dealMessage(QByteArray data)
 void mytcpsocket::deal(QString str)
 {
     QStringList str_list = str.split(" ");
+    //res为给客户端的回复
     QByteArray res;
+    //通过判断客户端发送的命令行，来确定当前该连接的状态
+    //根据状态和命令行来对客户端发送相应的回复
     if(str_list[0]=="HELO" || str_list[0]=="EHLO")
     {
         status = 2;
@@ -86,6 +92,8 @@ void mytcpsocket::deal(QString str)
         status = 0;
         res = "221 Bye";
     }
+    //当状态大于5后，说明发送的内容为报文主题
+    //只有当收到.表示结尾后才对客户端发送接收完成的消息
     else if (status >= 5)
     {
         status = 6;
@@ -95,18 +103,22 @@ void mytcpsocket::deal(QString str)
         }
 
     }
+    //当所有状态和命令行都不匹配时，代表发送了错误命令
     else
     {
         res = "502 error \r\n";
     }
 
+    //当状态为6，说明发送的内容为报文主题而非命令行
     if(status != 6)
     {
+        //将客户端的命令显示在主窗口上
         str = "C: " + str;
         this->pp->GetMessage(str);
     }
     if(!res.isEmpty())
     {
+        //对客户端发送收到内容对应的回复
         this->m_tcp->write(res);
         res = "S: "+res;
         this->pp->GetMessage(res);
@@ -122,9 +134,11 @@ void mytcpsocket::savefile(QByteArray t_data)
     file.close();
 }
 
+//用于处理邮件正文内容
 void mytcpsocket::dealContent()
 {
     QByteArray data(m_data);
+    //显示在主窗口上的字符串，内容为HTML格式
     QString res;
 
     //用正则表达式判断发送内容中是否包含图片：
@@ -175,17 +189,17 @@ void mytcpsocket::dealContent()
         }
     }
 
+    //将所有有用信息处理为HTML格式字符串，并显示在主窗口
     QRegExp reg_content("(<html>.*</html>)|(<img.*/>)");
     reg_content.setMinimal(true);
     int pos_content = 0;
+    //匹配到有用信息则将其加入显示内容字符串中
     while( (pos_content = reg_content.indexIn(data,pos_content)) != -1)
     {
-        qDebug()<<"pos_content: "<<pos_content;
         pos_content += reg_content.matchedLength();
         res.append(reg_content.cap());
     }
     res.replace("=0A","");
-    qDebug()<<"content: "<<res;
 
     this->pp->GetContent(res);
 }
