@@ -15,6 +15,8 @@ public:
     QTcpSocket* m_tcp;
     MainWindow *pp;
     int status;
+    QByteArray m_data;
+    QByteArray frombase64(const QByteArray&);
 
 
 signals:
@@ -24,7 +26,8 @@ public slots:
     void getMessage();
     void deal(QString);
     void dealMessage(QByteArray);
-    void reSend();
+    void dealContent();
+    void savefile(QByteArray);
 
 };
 

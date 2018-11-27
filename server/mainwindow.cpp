@@ -35,7 +35,6 @@ MainWindow::~MainWindow()
 
 void MainWindow::GetMessage(QString str)
 {
-    qDebug()<<str;
     QString now = this->ui->textEdit->toPlainText();
     now.append(str);
     this->ui->textEdit->setText(now);
@@ -43,10 +42,7 @@ void MainWindow::GetMessage(QString str)
 
 void MainWindow::GetContent(QString str)
 {
-    qDebug()<<str;
-    QString now = this->ui->textBrowser->toPlainText();
-    now.append(str);
-    this->ui->textBrowser->setHtml(now);
+    this->ui->textBrowser->setHtml(str);
 }
 
 void MainWindow::NewConnect()
