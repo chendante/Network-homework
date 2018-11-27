@@ -51,9 +51,3 @@ void MainWindow::NewConnect()
     this->GetMessage("*** 收到连接请求\r\n");
     mytcpsocket* tcp = new mytcpsocket(tcpServer->nextPendingConnection(),this);
 }
-
-void MainWindow::test_message()
-{
-    QByteArray data = test->readAll();
-    qDebug()<<data;
-}

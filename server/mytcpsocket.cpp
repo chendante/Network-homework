@@ -77,11 +77,11 @@ void mytcpsocket::deal(QString str)
         status = 4;
         res = "250 OK \r\n";
     }
-    else if (str_list[0] == "DATA" && status >= 4) {
+    else if (str.left(4) == "DATA" && status >= 4) {
         status = 5;
         res = "354 Enter mail, end with \".\" on a line by itself\r\n";
     }
-    else if( str_list[0] == "QUIT")
+    else if( str.left(4) == "QUIT")
     {
         status = 0;
         res = "221 Bye";
@@ -89,7 +89,6 @@ void mytcpsocket::deal(QString str)
     else if (status >= 5)
     {
         status = 6;
-        qDebug()<<str.right(3);
         if(str.right(3) == ".\r\n")
         {
             res = "250 message sent \r\n";
