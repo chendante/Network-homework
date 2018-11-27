@@ -11,6 +11,7 @@
 #include<QBuffer>
 #include<QFile>
 #include<QRegExp>
+#include<QMap>
 
 mytcpsocket::mytcpsocket(QTcpSocket* tcp,MainWindow *p)
 {
@@ -37,10 +38,9 @@ void mytcpsocket::dealMessage(QByteArray data)
     QString str(data);
     deal(str);
     if (status == 0) {
-        this->disconnect();
-        this->dealContent();
-        this->pp->GetContent(m_data);
         this->savefile(m_data);
+        this->m_tcp->disconnect();
+        this->dealContent();
     }
     if (status == 6)
     {
@@ -80,7 +80,8 @@ void mytcpsocket::deal(QString str)
     else if (status >= 5)
     {
         status = 6;
-        res = "250 message sent \r\n";
+//        res = "250 message sent \r\n";
+        res = "502 message sent \r\n";
     }
     else
     {
@@ -107,28 +108,35 @@ void mytcpsocket::savefile(QByteArray t_data)
 
 void mytcpsocket::dealContent()
 {
-    QString str(m_data);
     QByteArray data(m_data);
-    if(str.indexOf("Content-Type: image") != -1)
+    QString res;
+    QRegExp reg_image("Content-Type: image");
+    int pos_image = 0;
+    while((pos_image = reg_image.indexIn(data,pos_image)) != -1)
     {
+        qDebug()<<"pos_iamge: "<<pos_image;
+        pos_image += reg_image.matchedLength();
         qDebug()<<"have picture";
-        QRegExp reg("Content-Type: image");
-        QRegExp reg2("\r\n\r\n.*\r\n\r\n");
-//        QRegExp reg3("Content")
-        QString name = "yy.png";
+        QRegExp reg_in_image("\r\n\r\n.*\r\n\r\n");
+        QRegExp reg_name("name=\"(.*)\"");
+        reg_name.setMinimal(true);
+        reg_name.indexIn(data,pos_image);
+        QString name = reg_name.cap(1);
+        qDebug()<<"image_name: "<<name;
         QByteArray path = QString("<img src=\"%1\"/>\r\n").arg(name).toLatin1();
-        reg2.setMinimal(true);
+        reg_in_image.setMinimal(true);
 
-        QByteArray image_data(data);
+        QByteArray image_data;
 
-        int k = reg2.indexIn(image_data,reg.indexIn(data));
-        int len = reg2.matchedLength();
+        int k = reg_in_image.indexIn(data,pos_image);
+        int len = reg_in_image.matchedLength();
         if(k != -1)
         {
-            image_data = reg2.cap().toLatin1();
+            image_data = reg_in_image.cap().toLatin1();
         }
         qDebug()<<"K: "<<k;
-        this->m_data.replace(k,len,path);
+        qDebug()<<"len: "<<len;
+        data.replace(k,len,path);
         image_data.replace("\r\n","");
 
         image_data = mytcpsocket::frombase64(image_data);
@@ -142,6 +150,20 @@ void mytcpsocket::dealContent()
             img.save(name, "PNG", 100);
         }
     }
+
+    QRegExp reg_content("(<html>.*</html>)|(<img.*/>)");
+    reg_content.setMinimal(true);
+    int pos_content = 0;
+    while( (pos_content = reg_content.indexIn(data,pos_content)) != -1)
+    {
+        qDebug()<<"pos_content: "<<pos_content;
+        pos_content += reg_content.matchedLength();
+        res.append(reg_content.cap());
+    }
+    res.replace("=0A","");
+    qDebug()<<"content: "<<res;
+
+    this->pp->GetContent(res);
 }
 
 QByteArray mytcpsocket::frombase64(const QByteArray &data)
