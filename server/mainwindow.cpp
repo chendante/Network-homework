@@ -20,6 +20,7 @@ MainWindow::MainWindow(QWidget *parent) :
     ui->setupUi(this);
 
     tcpServer = new QTcpServer(this);
+    //令tcpserver监听任何ip连接到本地25端口的命令
     if(!tcpServer->listen(QHostAddress::Any,25))
     {
         qDebug()<<tcpServer->errorString();

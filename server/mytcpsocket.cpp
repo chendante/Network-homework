@@ -59,9 +59,9 @@ void mytcpsocket::deal(QString str)
         res += this->m_tcp->peerAddress().toString().toLatin1();
         res += "  \r\n";
     }
-    else if(str.left(9) == "MAIL FROM" && status == 2)
+    else if(str.left(9) == "MAIL FROM" && status >= 2)
     {
-        status++;
+        status = 3;
         res = "250 OK \r\n";
     }
     else if (str.left(7) == "RCPT TO" && status >= 3) {
@@ -70,7 +70,7 @@ void mytcpsocket::deal(QString str)
     }
     else if (str.left(4) == "DATA" && status >= 4) {
         status = 5;
-        res = "354 OK \r\n";
+        res = "354 Enter mail, end with \".\" on a line by itself\r\n";
     }
     else if( str.left(4) == "QUIT")
     {
@@ -80,8 +80,12 @@ void mytcpsocket::deal(QString str)
     else if (status >= 5)
     {
         status = 6;
-        res = "250 message sent \r\n";
-//        res = "502 message sent \r\n";
+        if(str.right(1) == ".")
+        {
+            res = "250 message sent \r\n";
+            //        res = "502 message sent \r\n";
+        }
+
     }
     else
     {
@@ -93,8 +97,11 @@ void mytcpsocket::deal(QString str)
         str = "C: " + str;
         this->pp->GetMessage(str);
     }
-    res = "S: "+res;
-    this->pp->GetMessage(res);
+    if(!res.isEmpty())
+    {
+        res = "S: "+res;
+        this->pp->GetMessage(res);
+    }
 }
 
 void mytcpsocket::savefile(QByteArray t_data)
