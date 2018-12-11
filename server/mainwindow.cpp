@@ -10,20 +10,23 @@
 #include <QJsonDocument>
 #include <QJsonValue>
 #include <QTcpSocket>
+#include <QThread>
+#include "mytcpsocket.h"
 
 MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),
     ui(new Ui::MainWindow)
 {
     ui->setupUi(this);
-    m_server = new myserver(this);
-//    tcpServer = new QTcpServer(this);
-//    if(!tcpServer->listen(QHostAddress::Any,24))
-//    {
-//        qDebug()<<tcpServer->errorString();
-//        close();
-//    }
-//    connect(tcpServer,&QTcpServer::newConnection,this,&MainWindow::NewConnect);
+
+    tcpServer = new QTcpServer(this);
+    //令tcpserver监听任何ip连接到本地25端口的命令
+    if(!tcpServer->listen(QHostAddress::Any,25))
+    {
+        qDebug()<<tcpServer->errorString();
+        close();
+    }
+    connect(tcpServer,&QTcpServer::newConnection,this,&MainWindow::NewConnect);
 }
 
 MainWindow::~MainWindow()
@@ -31,41 +34,20 @@ MainWindow::~MainWindow()
     delete ui;
 }
 
-void MainWindow::addString(QString str)
+void MainWindow::GetMessage(QString str)
 {
-    qDebug()<<str;
+    QString now = this->ui->textEdit->toPlainText();
+    now.append(str);
+    this->ui->textEdit->setText(now);
 }
 
-void MainWindow::SendMessage()
+void MainWindow::GetContent(QString str)
 {
-    QByteArray data;
-    QDataStream out(&data, QIODevice::WriteOnly);
-    QString test("使用TCP协议");
-    out<<1<<QDateTime::currentDateTime()<<test;
-    tcpSocket->write(data);
-}
-
-void MainWindow::GetMessage()
-{
-    QByteArray data = tcpSocket->readAll();
-    qDebug()<<data;
-    int Type;
-    QString test;
-    QDataStream in(&data,QIODevice::ReadOnly);
-    in>>Type>>test;
-    if(Type == 1)
-    {
-        this->SendMessage();
-    }
-    else if(Type == 2)
-    {
-        this->SendDir();
-    }
-    qDebug()<<test;
+    this->ui->textBrowser->setHtml(str);
 }
 
 void MainWindow::NewConnect()
 {
-    tcpSocket = tcpServer->nextPendingConnection();
-    connect(tcpSocket,SIGNAL(readyRead()),this,SLOT(GetMessage()));
+    this->GetMessage("*** 收到连接请求\r\n");
+    mytcpsocket* tcp = new mytcpsocket(tcpServer->nextPendingConnection(),this);
 }

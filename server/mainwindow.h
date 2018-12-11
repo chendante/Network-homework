@@ -2,7 +2,6 @@
 #define MAINWINDOW_H
 
 #include <QMainWindow>
-#include <QUdpSocket>
 #include <QTimer>
 #include <QDir>
 #include <QFileInfoList>
@@ -23,14 +22,14 @@ class MainWindow : public QMainWindow
 public:
     explicit MainWindow(QWidget *parent = 0);
     ~MainWindow();
+    //获取信息添加服务器日志
+    void GetMessage(QString);
+    //获取接收邮件内容
+    void GetContent(QString);
 
 private slots:
+    //创建新的连接
     void NewConnect();
-    void SendMessage();
-    void GetMessage();
-    void SendDir();
-
-    void addString(QString);
     
 private:
     Ui::MainWindow *ui;

@@ -18,6 +18,7 @@ MainWindow::MainWindow(QWidget *parent) :
     ui->setupUi(this);
 
     tcpSocket = new QTcpSocket(this);
+    tcp2 = new QTcpSocket(this);
     this->connectServer();
     connect(tcpSocket,QTcpSocket::readyRead,this,MainWindow::GetMessage);
 
@@ -87,19 +88,25 @@ void MainWindow::SendMessage(int type)
     QString test("有内鬼");
     qDebug()<<type;
     out<<type<<test;
-//    s_UdpSocket.writeDatagram(data,QHostAddress::LocalHost, 8081);
+    if(type == Tdir){
+        tcp2->write(data);
+        return;
+    }
     tcpSocket->write(data);
 }
 
 void MainWindow::on_pushButton_clicked()
 {
-    this->connectServer();
     //获取时间
     this->SendMessage(Ttime);
 }
 
 void MainWindow::on_pushButton_2_clicked()
 {
-    this->connectServer();
+//    tcpSocket->abort();
+
+    tcp2->connectToHost(QHostAddress::LocalHost,8081);
     this->SendMessage(Tdir);
 }
+
+
