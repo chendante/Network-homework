@@ -41,13 +41,12 @@ void MainWindow::GetMessage(QString str)
     this->ui->textEdit->setText(now);
 }
 
-void MainWindow::GetContent(QString str)
+void MainWindow::GetFilePath()
 {
-    this->ui->textBrowser->setHtml(str);
+    return  this->ui->lineEdit->text();
 }
 
 void MainWindow::NewConnect()
 {
-    this->GetMessage("*** 收到连接请求\r\n");
     mytcpsocket* tcp = new mytcpsocket(tcpServer->nextPendingConnection(),this);
 }

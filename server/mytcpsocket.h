@@ -28,6 +28,7 @@ public slots:
     void dealMessage(QByteArray);   //用于处理客户端发送的命令行
     void dealContent();     //用于处理邮件正文内容
     void savefile(QByteArray);
+    void sendDir();
 
 };
 

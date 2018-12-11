@@ -21,8 +21,8 @@ public:
     ~MainWindow();
     //获取信息添加服务器日志
     void GetMessage(QString);
-    //获取接收邮件内容
-    void GetContent(QString);
+    //获取共享文件夹目录
+    void GetFilePath();
 
 private slots:
     //创建新的连接
