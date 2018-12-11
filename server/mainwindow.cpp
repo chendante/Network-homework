@@ -36,9 +36,16 @@ void MainWindow::SendMessage()
 
 void MainWindow::SendDir()
 {
+    QString file_path = this->ui->lineEdit->text();
     QByteArray data;
     QDataStream out(&data, QIODevice::WriteOnly);
-    QDir dir("./");
+    QDir dir(file_path);
+    // 当填写目录不存在时，不发送任何内容
+    if(!dir.exists())
+    {
+        this->ui->textEdit->append("wrong path\n");
+        return;
+    }
     dir.setFilter(QDir::Files|QDir::Hidden|QDir::NoSymLinks);
     dir.setSorting(QDir::Time);
     QFileInfoList d_list = dir.entryInfoList();
