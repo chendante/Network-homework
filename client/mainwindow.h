@@ -26,13 +26,18 @@ private slots:
     void GetMessage();
     void SendMessage(int);
 
-    void on_pushButton_clicked();
-
     void on_pushButton_2_clicked();
+
+    void on_tableWidget_cellDoubleClicked(int row, int column);
+    void Download_file(QString);
 
 private:
     Ui::MainWindow *ui;
     QUdpSocket g_UdpSocket,s_UdpSocket;
+    QString download_file_name;
+    qint64 download_file_size;
+    QByteArray download_file_data;
+    int want_count;
 };
 
 #endif // MAINWINDOW_H

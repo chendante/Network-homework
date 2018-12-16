@@ -9,6 +9,7 @@
 #include <QJsonArray>
 #include <QJsonDocument>
 #include <QJsonValue>
+#include <QFileDialog>
 
 MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),
@@ -87,5 +88,43 @@ void MainWindow::GetMessage()
     {
         this->SendDir();
     }
+    else if(Type == 3)
+    {
+        this->SendFile(test);
+    }
     qDebug()<<test;
+}
+
+// 按键，更改共享目录地址
+void MainWindow::on_pushButton_clicked()
+{
+    QString dir_url = QFileDialog::getExistingDirectory();
+    this->ui->lineEdit->setText(dir_url);
+}
+
+void MainWindow::SendFile(QString file_name)
+{
+    QString file_path = this->ui->lineEdit->text()+file_name;
+    QFile file;
+    file.setFileName(file_path);
+    if(!file.open(QIODevice::ReadOnly)){
+        qDebug()<<"wrong" ;
+        return;
+    }
+    QByteArray data;
+    QDataStream out(&data, QIODevice::WriteOnly);
+    out<<4<<file_name<<file.size();
+    g_UdpSocket.writeDatagram(data,QHostAddress::LocalHost,8080);
+    int count=0;
+    while(!file.atEnd()){
+        QByteArray line;
+        QDataStream out3(&line, QIODevice::WriteOnly);
+        out3<<5<<file_name<<count<<file.read(4000);
+        count++;
+        g_UdpSocket.writeDatagram(line,QHostAddress::LocalHost,8080);
+    }
+    QByteArray data2;
+    QDataStream out2(&data2, QIODevice::WriteOnly);
+    out2<<6<<file_name<<count;
+    g_UdpSocket.writeDatagram(data2,QHostAddress::LocalHost,8080);
 }
