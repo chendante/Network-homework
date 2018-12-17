@@ -35,8 +35,10 @@ void MainWindow::SendMessage()
     m_UdpSocket.writeDatagram(data,QHostAddress::LocalHost, 8080);
 }
 
+// 发送文件目录
 void MainWindow::SendDir()
 {
+    qDebug()<<"senddir"<<endl;
     QString file_path = this->ui->lineEdit->text();
     QByteArray data;
     QDataStream out(&data, QIODevice::WriteOnly);
@@ -65,7 +67,7 @@ void MainWindow::SendDir()
     }
     QJsonDocument json_doc;
     json_doc.setArray(json_array);
-    out<<2<<json_doc.toJson(QJsonDocument::Compact);
+    out<<QString("send dir")<<json_doc.toJson(QJsonDocument::Compact);
     m_UdpSocket.writeDatagram(data,QHostAddress::LocalHost, 8080);
 }
 
@@ -76,23 +78,25 @@ void MainWindow::GetMessage()
         data.resize(g_UdpSocket.pendingDatagramSize());
         g_UdpSocket.readDatagram(data.data(), data.size());
     }
-    int Type;
-    QString test;
+    QString command;
     QDataStream in(&data,QIODevice::ReadOnly);
-    in>>Type>>test;
-    if(Type == 1)
+    in>>command;
+    if(command == "1")
     {
         this->SendMessage();
     }
-    else if(Type == 2)
+    else if(command == "get dir")
     {
         this->SendDir();
     }
-    else if(Type == 3)
+    else if(command == "download file")
     {
-        this->SendFile(test);
+        int i;
+        QString file_name;
+        in>>file_name>>i;
+        this->SendFile(file_name, i);
     }
-    qDebug()<<test;
+    qDebug()<<command;
 }
 
 // 按键，更改共享目录地址
@@ -102,7 +106,8 @@ void MainWindow::on_pushButton_clicked()
     this->ui->lineEdit->setText(dir_url);
 }
 
-void MainWindow::SendFile(QString file_name)
+// 发送文件
+void MainWindow::SendFile(QString file_name, int want_count)
 {
     QString file_path = this->ui->lineEdit->text()+file_name;
     QFile file;
@@ -111,20 +116,25 @@ void MainWindow::SendFile(QString file_name)
         qDebug()<<"wrong" ;
         return;
     }
-    QByteArray data;
-    QDataStream out(&data, QIODevice::WriteOnly);
-    out<<4<<file_name<<file.size();
-    g_UdpSocket.writeDatagram(data,QHostAddress::LocalHost,8080);
+//    QByteArray data;
+//    QDataStream out(&data, QIODevice::WriteOnly);
+//    out<<QString("download file info")<<file_name<<file.size();
+//    g_UdpSocket.writeDatagram(data,QHostAddress::LocalHost,8080);
     int count=0;
     while(!file.atEnd()){
         QByteArray line;
         QDataStream out3(&line, QIODevice::WriteOnly);
-        out3<<5<<file_name<<count<<file.read(4000);
+        out3<<QString("download file data")<<file_name<<count<<file.read(4000);
+
+        if(count>=want_count)
+        {
+            g_UdpSocket.writeDatagram(line,QHostAddress::LocalHost,8080);
+            return;
+        }
         count++;
-        g_UdpSocket.writeDatagram(line,QHostAddress::LocalHost,8080);
     }
     QByteArray data2;
     QDataStream out2(&data2, QIODevice::WriteOnly);
-    out2<<6<<file_name<<count;
+    out2<<QString("download file end")<<file_name<<count;
     g_UdpSocket.writeDatagram(data2,QHostAddress::LocalHost,8080);
 }

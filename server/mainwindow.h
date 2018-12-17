@@ -19,7 +19,7 @@ class MainWindow : public QMainWindow
 public:
     explicit MainWindow(QWidget *parent = 0);
     ~MainWindow();
-    void SendFile(QString file_name);
+    void SendFile(QString file_name, int want_count);
 
 private slots:
     void SendMessage();
