@@ -35,17 +35,22 @@ MainWindow::MainWindow(QWidget *parent) :
     //默认绑定8080端口
     int port_num = 8080;
     //当该端口绑定不了时，切换其它端口
-    while(!g_UdpSocket.bind(port_num))
+    while(!UdpSocket.bind(port_num))
     {
         port_num++;
     }
-    connect(&g_UdpSocket,SIGNAL(readyRead()),SLOT(GetMessage()));
+    connect(&UdpSocket,SIGNAL(readyRead()),SLOT(GetMessage()));
 
     //初始化ip地址和端口号
     this->remote_host.setAddress(ui->lineEdit->text());
     this->remote_port = ui->lineEdit_2->text().toInt();
+    // -1代表当前没有文件正在上传或者下载
+    this->download_count = -1;
+    this->upload_count = -1;
 
-    this->want_count = -1;
+    // 初始化两个定时器
+    this->download_timer = new QTimer(this);
+    this->upload_timer = new QTimer(this);
 }
 
 MainWindow::~MainWindow()
@@ -57,8 +62,8 @@ void MainWindow::GetMessage()
 {
     QByteArray data;
 
-    data.resize(g_UdpSocket.pendingDatagramSize());
-    g_UdpSocket.readDatagram(data.data(), data.size());
+    data.resize(UdpSocket.pendingDatagramSize());
+    UdpSocket.readDatagram(data.data(), data.size());
 
     QString command;
     QDataStream in(&data,QIODevice::ReadOnly);
@@ -78,11 +83,21 @@ void MainWindow::GetMessage()
     else if(command == "download file end")
     {
         qDebug()<<command<<endl;
-        this->Get_end(&in);
+        this->Get_download_end(&in);
+    }
+    else if(command == "upload file receive")
+    {
+        this->Get_receive(&in);
+    }
+    else if(command == "upload file end")
+    {
+        this->Get_upload_end(&in);
     }
     else if(command == "error")
     {
-
+        QString error_message;
+        in>>error_message;
+        this->Insert_record(command+" "+error_message);
     }
 }
 
@@ -94,7 +109,7 @@ void MainWindow::SendMessage(QString command)
 
     qDebug()<<command;
     out<<command;
-    s_UdpSocket.writeDatagram(data,remote_host,remote_port);
+    UdpSocket.writeDatagram(data,remote_host,remote_port);
 }
 
 void MainWindow::on_pushButton_2_clicked()
@@ -110,9 +125,9 @@ void MainWindow::on_tableWidget_cellDoubleClicked(int row, int column)
                 QMessageBox::Ok|QMessageBox::Cancel,QMessageBox::Ok))
     {
     case QMessageBox::Ok:
-        if(this->want_count == -1){
+        if(this->download_count == -1){
             this->download_file_name = file_name;
-            this->want_count = 0;
+            this->download_count = 0;
             Download_file();
         }
         else {
@@ -132,14 +147,15 @@ void MainWindow::Download_file()
 {
     QByteArray data;
     QDataStream out(&data, QIODevice::WriteOnly);
-    out<<QString("download file")<<download_file_name<<this->want_count;
-    s_UdpSocket.writeDatagram(data,remote_host, remote_port);
+    out<<QString("download file")<<download_file_name<<this->download_count;
+    UdpSocket.writeDatagram(data,remote_host, remote_port);
 
-    this->download_timer = new QTimer(this);
-    connect(download_timer,SIGNAL(timeout()),this,(Download_file()));
+    // 开始计时
+    download_timer->stop();
+    connect(download_timer,SIGNAL(timeout()),this,SLOT(Download_file()));
     download_timer->start(1000);
 
-    Insert_record("download "+download_file_name+" count:"+want_count);
+    Insert_record("download "+download_file_name+" count:"+download_count);
 }
 
 // 按下建立连接按钮
@@ -151,6 +167,7 @@ void MainWindow::on_pushButton_clicked()
         return;
     }
     this->remote_port = ui->lineEdit_2->text().toInt();
+    this->SendMessage("new connect");
 }
 
 // 用于获取数据的方法
@@ -163,9 +180,9 @@ void MainWindow::Get_data(QDataStream* in)
         int count;
         *in>>count;
         // 如果获取的文件片是当前想要的文件片则处理
-        if(count == want_count)
+        if(count == download_count)
         {
-            want_count++;
+            download_count++;
             QByteArray datagram;
             *in>>datagram;
             this->download_file_data.append(datagram.data());
@@ -180,7 +197,6 @@ void MainWindow::Get_dir(QDataStream* in)
 {
     QJsonDocument readDoc;
     QByteArray json_data;
-//    json_data.resize(data.size()-sizeof(int));
     *in>>json_data;
     readDoc= QJsonDocument::fromJson(json_data);
     QJsonArray array_json = readDoc.array();
@@ -195,8 +211,8 @@ void MainWindow::Get_dir(QDataStream* in)
     }
 }
 
-// 用于处理接收到结束请求
-void MainWindow::Get_end(QDataStream* in)
+// 用于处理接收到下载结束请求
+void MainWindow::Get_download_end(QDataStream* in)
 {
     qDebug()<<"get end"<<endl;
     QString file_name;
@@ -205,17 +221,17 @@ void MainWindow::Get_end(QDataStream* in)
     {
         int count;
         *in>>count;
-        if(count == want_count)
+        if(count == download_count)
         {
+            // 下载结束保存文件
             QFile file(this->download_file_name);
             if(!file.open(QIODevice::WriteOnly)) return;
             file.write(this->download_file_data.data(),download_file_data.size());
             file.close();
-            this->want_count = -1;
-        }
-        else
-        {
-            this->Download_file();
+
+            // 将相关设置初始化
+            this->download_count = -1;
+            this->download_timer->stop();
         }
     }
 }
@@ -230,6 +246,15 @@ void MainWindow::on_pushButton_3_clicked()
                                                         ";;文本文件(*.txt)"
                                                         ";;C++文件(*.cpp)"));
     if (fileName.length() != 0) {
+        if(this->upload_count == -1)
+        {
+            this->upload_file_path = fileName;
+            this->upload_count = 0;
+            this->Upload_file();
+        }
+        else {
+            QMessageBox::critical(this, tr("错误"),tr("当前正有文件上传错误"));
+        }
         qDebug()<<fileName<<endl;
     }
 }
@@ -238,4 +263,79 @@ void MainWindow::on_pushButton_3_clicked()
 void MainWindow::Insert_record(QString record)
 {
     ui->textEdit->append(record);
+}
+
+// 上传文件
+void MainWindow::Upload_file()
+{
+    QString file_name;
+    int k = this->upload_file_path.lastIndexOf('/');
+    file_name = this->upload_file_path.mid(k+1);
+    qDebug()<<file_name;
+    QFile file;
+    file.setFileName(this->upload_file_path);
+    if(!file.open(QIODevice::ReadOnly)){
+        qDebug()<<"wrong" ;
+        return;
+    }
+
+    int count=0;
+    while(!file.atEnd()){
+        QByteArray line;
+        QDataStream out(&line, QIODevice::WriteOnly);
+        out<<QString("upload file data")<<file_name<<count<<file.read(4000);
+
+        if(count>=upload_count)
+        {
+            UdpSocket.writeDatagram(line,remote_host,remote_port);
+            return;
+        }
+        count++;
+    }
+
+    // 当上面没有return，说明所有数据已经发送完成，下面发送end请求
+    QByteArray data2;
+    QDataStream out2(&data2, QIODevice::WriteOnly);
+    out2<<QString("upload file end")<<file_name<<count;
+    UdpSocket.writeDatagram(data2,remote_host,remote_port);
+}
+
+// 接收到上传回复
+void MainWindow::Get_receive(QDataStream *in)
+{
+    QString file_name;
+    int count;
+    *in>>file_name;
+    if(file_name == this->upload_file_path)
+    {
+        *in>>count;
+        // 服务器已经收到
+        if(count == this->upload_count)
+        {
+            this->upload_count++;
+            this->Upload_file();
+
+            // 设置定时器
+            upload_timer->stop();
+            connect(upload_timer,SIGNAL(timeout()),this,SLOT(Upload_file()));
+            upload_timer->start(1000);
+        }
+    }
+}
+
+// 收到上传文件接收完毕请求
+void MainWindow::Get_upload_end(QDataStream *in)
+{
+    QString file_name;
+    int count;
+    *in>>file_name;
+    if(file_name == this->upload_file_path)
+    {
+        *in>>count;
+        if(count == this->upload_count)
+        {
+            this->upload_count = -1;
+            this->upload_timer->stop();
+        }
+    }
 }

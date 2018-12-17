@@ -17,8 +17,10 @@ MainWindow::MainWindow(QWidget *parent) :
 {
     ui->setupUi(this);
 
-    g_UdpSocket.bind(8081);
-    connect(&g_UdpSocket,SIGNAL(readyRead()),SLOT(GetMessage()));
+    UdpSocket.bind(8081);
+    connect(&UdpSocket,SIGNAL(readyRead()),SLOT(GetMessage()));
+
+    client_list = QVector<myftp*>();
 }
 
 MainWindow::~MainWindow()
@@ -32,7 +34,7 @@ void MainWindow::SendMessage()
     QDataStream out(&data, QIODevice::WriteOnly);
     QString test("使用UDP服务");
     out<<1<<QDateTime::currentDateTime()<<test;
-    m_UdpSocket.writeDatagram(data,QHostAddress::LocalHost, 8080);
+    UdpSocket.writeDatagram(data,QHostAddress::LocalHost, 8080);
 }
 
 // 发送文件目录
@@ -68,20 +70,23 @@ void MainWindow::SendDir()
     QJsonDocument json_doc;
     json_doc.setArray(json_array);
     out<<QString("send dir")<<json_doc.toJson(QJsonDocument::Compact);
-    m_UdpSocket.writeDatagram(data,QHostAddress::LocalHost, 8080);
+    UdpSocket.writeDatagram(data,QHostAddress::LocalHost, 8080);
 }
 
 void MainWindow::GetMessage()
 {
     QByteArray data;
-    while (g_UdpSocket.hasPendingDatagrams()) {
-        data.resize(g_UdpSocket.pendingDatagramSize());
-        g_UdpSocket.readDatagram(data.data(), data.size());
-    }
+    data.resize(UdpSocket.pendingDatagramSize());
+
+    // 接收数据的来源ip和端口
+    QHostAddress ip;
+    int port;
+    UdpSocket.readDatagram(data.data(), data.size(),&ip,port);
+
     QString command;
     QDataStream in(&data,QIODevice::ReadOnly);
     in>>command;
-    if(command == "1")
+    if(command == "new connect")
     {
         this->SendMessage();
     }
@@ -95,6 +100,12 @@ void MainWindow::GetMessage()
         QString file_name;
         in>>file_name>>i;
         this->SendFile(file_name, i);
+    }
+    else if (command == "upload file data") {
+
+    }
+    else if (command == "upload file end") {
+
     }
     qDebug()<<command;
 }
@@ -125,7 +136,7 @@ void MainWindow::SendFile(QString file_name, int want_count)
 
         if(count>=want_count)
         {
-            g_UdpSocket.writeDatagram(line,QHostAddress::LocalHost,8080);
+            UdpSocket.writeDatagram(line,QHostAddress::LocalHost,8080);
             return;
         }
         count++;
@@ -133,5 +144,35 @@ void MainWindow::SendFile(QString file_name, int want_count)
     QByteArray data2;
     QDataStream out2(&data2, QIODevice::WriteOnly);
     out2<<QString("download file end")<<file_name<<count;
-    g_UdpSocket.writeDatagram(data2,QHostAddress::LocalHost,8080);
+    UdpSocket.writeDatagram(data2,QHostAddress::LocalHost,8080);
+}
+
+// 新连接
+void MainWindow::new_connect(QHostAddress ip,int port)
+{
+    QByteArray data;
+    QDataStream out(&data, QIODevice::WriteOnly);
+    for(int i=0;i<this->client_list.size();i++)
+    {
+        // 查看该地址是否已经建立连接
+        if(client_list.at(i)->Is_equal(ip,port))
+        {
+            // 如果已经建立连接
+            // 发送错误信息
+            out<<QString("error")<<QString("already connect");
+            client_list.at(i)->SendMessage(data);
+            return;
+        }
+    }
+    // 当之前没有建立连接，则新加入
+    myftp* new_one = new myftp(ip,port,this);
+    client_list.append(new_one);
+    // 发送连接成功
+    out<<QString("connect success");
+    new_one->SendMessage(data);
+}
+
+QString MainWindow::GetFilePath()
+{
+    return this->ui->lineEdit->text();
 }

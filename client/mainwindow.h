@@ -34,9 +34,13 @@ private slots:
     void on_tableWidget_cellDoubleClicked(int row, int column);
     void Download_file();
 
+    void Upload_file();
+
     void Get_data(QDataStream*);
     void Get_dir(QDataStream*);
-    void Get_end(QDataStream*);
+    void Get_download_end(QDataStream*);
+    void Get_receive(QDataStream*);
+    void Get_upload_end(QDataStream*);
 
     void Insert_record(QString);
 
@@ -47,19 +51,19 @@ private slots:
 
 private:
     Ui::MainWindow *ui;
-    QUdpSocket g_UdpSocket,s_UdpSocket;
+    QUdpSocket UdpSocket;
 
     // 下载文件名
     QString download_file_name;
     // 下载文件的二进制格式
     QByteArray download_file_data;
     // 下载文件希望的下一个编号
-    int want_count;
+    int download_count;
 
-    // 上传文件名
-    QString upload_file_name;
+    // 上传文件地址
+    QString upload_file_path;
     // 上传文件希望的下一个编号
-    int need_count;
+    int upload_count;
 
 
     // 服务器ip地址

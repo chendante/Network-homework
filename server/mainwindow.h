@@ -7,6 +7,8 @@
 #include <QDir>
 #include <QFileInfoList>
 #include <QFileInfo>
+#include "myftp.h"
+#include <QVector>
 
 namespace Ui {
 class MainWindow;
@@ -20,17 +22,22 @@ public:
     explicit MainWindow(QWidget *parent = 0);
     ~MainWindow();
     void SendFile(QString file_name, int want_count);
+    QString GetFilePath();
 
 private slots:
     void SendMessage();
     void GetMessage();
+
     void SendDir();
+
+    void new_connect();
     
     void on_pushButton_clicked();
 
 private:
     Ui::MainWindow *ui;
-    QUdpSocket m_UdpSocket,g_UdpSocket;
+    QUdpSocket UdpSocket;
+    QVector<myftp*> client_list;
 };
 
 #endif // MAINWINDOW_H
