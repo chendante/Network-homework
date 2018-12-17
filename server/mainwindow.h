@@ -7,12 +7,23 @@
 #include <QDir>
 #include <QFileInfoList>
 #include <QFileInfo>
-#include "myftp.h"
 #include <QVector>
+#include <QByteArray>
+#include <QDataStream>
+#include <QDateTime>
+#include <QString>
+#include <QDebug>
+#include <QJsonObject>
+#include <QJsonArray>
+#include <QJsonDocument>
+#include <QJsonValue>
+#include <QFileDialog>
 
 namespace Ui {
 class MainWindow;
 }
+
+class myftp;
 
 class MainWindow : public QMainWindow
 {
@@ -29,9 +40,11 @@ private slots:
     void SendMessage();
     void GetMessage();
 
-    void SendDir();
-
-    void new_connect();
+    void new_connect(QHostAddress ip,int port);
+    void get_dir(QHostAddress ip,int port);
+    void download_file(QHostAddress ip,int port,QString file_name,int want_count);
+    void upload_file_data(QHostAddress ip,int port,QDataStream* in);
+    void upload_file_end(QHostAddress ip,int port,QDataStream* in);
     
     void on_pushButton_clicked();
 

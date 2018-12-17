@@ -1,15 +1,6 @@
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
-#include <QByteArray>
-#include <QDataStream>
-#include <QDateTime>
-#include <QString>
-#include <QDebug>
-#include <QJsonObject>
-#include <QJsonArray>
-#include <QJsonDocument>
-#include <QJsonValue>
-#include <QFileDialog>
+#include "myftp.h"
 
 MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),
@@ -37,42 +28,6 @@ void MainWindow::SendMessage()
     UdpSocket.writeDatagram(data,QHostAddress::LocalHost, 8080);
 }
 
-// 发送文件目录
-void MainWindow::SendDir()
-{
-    qDebug()<<"senddir"<<endl;
-    QString file_path = this->ui->lineEdit->text();
-    QByteArray data;
-    QDataStream out(&data, QIODevice::WriteOnly);
-    QDir dir(file_path);
-    // 当填写目录不存在时，不发送任何内容
-    if(!dir.exists())
-    {
-        this->ui->textEdit->append("wrong path\n");
-        return;
-    }
-    dir.setFilter(QDir::Files|QDir::Hidden|QDir::NoSymLinks);
-    dir.setSorting(QDir::Time);
-    QFileInfoList d_list = dir.entryInfoList();
-    qDebug()<<d_list.size();
-    //将d_list 中内容整理为JSON格式
-    QJsonArray json_array;
-    for (int i = 0; i < d_list.size(); i++)
-    {
-        QFileInfo fileInfo = d_list.at(i);
-        QJsonObject file_json;
-        file_json.insert("name",fileInfo.fileName());
-        file_json.insert("time",fileInfo.created().toString("yyyy-MM-dd hh:mm:ss"));
-        file_json.insert("size",QString::number(fileInfo.size()));
-        file_json.insert("path",fileInfo.absoluteFilePath());
-        json_array.append(QJsonValue(file_json));
-    }
-    QJsonDocument json_doc;
-    json_doc.setArray(json_array);
-    out<<QString("send dir")<<json_doc.toJson(QJsonDocument::Compact);
-    UdpSocket.writeDatagram(data,QHostAddress::LocalHost, 8080);
-}
-
 void MainWindow::GetMessage()
 {
     QByteArray data;
@@ -80,34 +35,35 @@ void MainWindow::GetMessage()
 
     // 接收数据的来源ip和端口
     QHostAddress ip;
-    int port;
-    UdpSocket.readDatagram(data.data(), data.size(),&ip,port);
+    quint16 port;
+    UdpSocket.readDatagram(data.data(), data.size(),&ip,&port);
 
     QString command;
     QDataStream in(&data,QIODevice::ReadOnly);
     in>>command;
     if(command == "new connect")
     {
-        this->SendMessage();
+        this->new_connect(ip, port);
     }
     else if(command == "get dir")
     {
-        this->SendDir();
+        this->get_dir(ip,port);
     }
     else if(command == "download file")
     {
         int i;
         QString file_name;
         in>>file_name>>i;
-        this->SendFile(file_name, i);
+        this->download_file(ip,port,file_name,i);
     }
     else if (command == "upload file data") {
-
+        this->upload_file_data(ip,port,&in);
     }
     else if (command == "upload file end") {
-
+        this->upload_file_end(ip,port,&in);
     }
     qDebug()<<command;
+    this->InsertRecord(ip.toString()+":"+QString::number(port)+"  "+command);
 }
 
 // 按键，更改共享目录地址
@@ -170,14 +126,114 @@ void MainWindow::new_connect(QHostAddress ip,int port)
     // 发送连接成功
     out<<QString("connect success");
     new_one->SendMessage(data);
+
+    // 向列表添加新用户
+    qDebug()<<ui->tableWidget->rowCount()<<endl;
+    ui->tableWidget->setRowCount(ui->tableWidget->rowCount()+1);
+    qDebug()<<ui->tableWidget->rowCount()<<endl;
+    qDebug()<<ip.toString()<<QString::number(port);
+    ui->tableWidget->setItem(
+                ui->tableWidget->rowCount()-1,0,
+                new QTableWidgetItem(ip.toString()));
+    ui->tableWidget->setItem(
+                ui->tableWidget->rowCount()-1,1,
+                new QTableWidgetItem(QString::number(port)));
+    qDebug()<<ui->tableWidget->rowCount()<<endl;
 }
 
+// 获取目录信息
 QString MainWindow::GetFilePath()
 {
     return this->ui->lineEdit->text();
 }
 
+// 添加一条记录
 void MainWindow::InsertRecord(QString record)
 {
+    this->ui->textEdit->append(record);
+}
 
+void MainWindow::get_dir(QHostAddress ip, int port)
+{
+    QByteArray data;
+    QDataStream out(&data, QIODevice::WriteOnly);
+    for(int i=0;i<this->client_list.size();i++)
+    {
+        // 查看该地址是否已经建立连接
+        if(client_list.at(i)->Is_equal(ip,port))
+        {
+            // 如果已经建立连接，直接响应请求
+            client_list.at(i)->SendDir();
+            return;
+        }
+    }
+    // 如果没有建立连接
+    // 发送错误信息
+    out<<QString("error")<<QString("haven't connect");
+    UdpSocket.writeDatagram(data,ip,port);
+}
+
+void MainWindow::download_file(QHostAddress ip, int port, QString file_name, int want_count)
+{
+
+    for(int i=0;i<this->client_list.size();i++)
+    {
+        // 查看该地址是否已经建立连接
+        if(client_list.at(i)->Is_equal(ip,port))
+        {
+            // 如果已经建立连接，直接响应请求
+            client_list.at(i)->SendFile(file_name,want_count);
+            return;
+        }
+    }
+
+    // 如果没有建立连接
+    // 发送错误信息
+    QByteArray data;
+    QDataStream out(&data, QIODevice::WriteOnly);
+    out<<QString("error")<<QString("already connect");
+    UdpSocket.writeDatagram(data,ip,port);
+}
+
+void MainWindow::upload_file_data(QHostAddress ip, int port, QDataStream *in)
+{
+
+    for(int i=0;i<this->client_list.size();i++)
+    {
+        // 查看该地址是否已经建立连接
+        if(client_list.at(i)->Is_equal(ip,port))
+        {
+            // 如果已经建立连接，直接响应请求
+            client_list.at(i)->ReceiveFile(in);
+            return;
+        }
+    }
+
+    // 如果没有建立连接
+    // 发送错误信息
+    QByteArray data;
+    QDataStream out(&data, QIODevice::WriteOnly);
+    out<<QString("error")<<QString("already connect");
+    UdpSocket.writeDatagram(data,ip,port);
+}
+
+void MainWindow::upload_file_end(QHostAddress ip, int port, QDataStream *in)
+{
+    for(int i=0;i<this->client_list.size();i++)
+    {
+        // 查看该地址是否已经建立连接
+        if(client_list.at(i)->Is_equal(ip,port))
+        {
+            // 如果已经建立连接，直接响应请求
+            client_list.at(i)->ReceiveEnd(in);
+            return;
+        }
+    }
+
+    // 如果没有建立连接
+    // 发送错误信息
+    QByteArray data;
+    QDataStream out(&data, QIODevice::WriteOnly);
+    out<<QString("error")<<QString("already connect");
+    UdpSocket.writeDatagram(data,ip,port);
 }

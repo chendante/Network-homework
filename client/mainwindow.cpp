@@ -68,9 +68,11 @@ void MainWindow::GetMessage()
     QString command;
     QDataStream in(&data,QIODevice::ReadOnly);
     in>>command;
+
+    //根据命令不同，选用不同函数进行处理
     if(command == "connect success")
     {
-
+        QMessageBox::information(this,tr("提示"),tr("连接建立成功"));
     }
     else if (command == "send dir")
     {
@@ -82,11 +84,11 @@ void MainWindow::GetMessage()
     }
     else if(command == "download file end")
     {
-        qDebug()<<command<<endl;
         this->Get_download_end(&in);
     }
     else if(command == "upload file receive")
     {
+        qDebug()<<command<<endl;
         this->Get_receive(&in);
     }
     else if(command == "upload file end")
@@ -98,7 +100,9 @@ void MainWindow::GetMessage()
         QString error_message;
         in>>error_message;
         this->Insert_record(command+" "+error_message);
+        return;
     }
+    this->Insert_record(command);
 }
 
 // 向服务器发送指令
@@ -126,6 +130,7 @@ void MainWindow::on_tableWidget_cellDoubleClicked(int row, int column)
     {
     case QMessageBox::Ok:
         if(this->download_count == -1){
+            this->download_file_data.clear();
             this->download_file_name = file_name;
             this->download_count = 0;
             Download_file();
@@ -153,7 +158,7 @@ void MainWindow::Download_file()
     // 开始计时
     download_timer->stop();
     connect(download_timer,SIGNAL(timeout()),this,SLOT(Download_file()));
-    download_timer->start(1000);
+    download_timer->start(10000);
 
     Insert_record("download "+download_file_name+" count:"+download_count);
 }
@@ -232,6 +237,7 @@ void MainWindow::Get_download_end(QDataStream* in)
             // 将相关设置初始化
             this->download_count = -1;
             this->download_timer->stop();
+            this->download_file_data.clear();
         }
     }
 }
@@ -239,6 +245,7 @@ void MainWindow::Get_download_end(QDataStream* in)
 // 上传文件按钮
 void MainWindow::on_pushButton_3_clicked()
 {
+    // 获取想要上传的文件名
     QString fileName = QFileDialog::getOpenFileName(this,
                                                     tr("上传文件"),
                                                     "/",
@@ -296,7 +303,7 @@ void MainWindow::Upload_file()
     // 当上面没有return，说明所有数据已经发送完成，下面发送end请求
     QByteArray data2;
     QDataStream out2(&data2, QIODevice::WriteOnly);
-    out2<<QString("upload file end")<<file_name<<count;
+    out2<<QString("upload file end")<<file_name<<upload_count;
     UdpSocket.writeDatagram(data2,remote_host,remote_port);
 }
 
@@ -306,7 +313,7 @@ void MainWindow::Get_receive(QDataStream *in)
     QString file_name;
     int count;
     *in>>file_name;
-    if(file_name == this->upload_file_path)
+    if(this->upload_file_path.endsWith(file_name))
     {
         *in>>count;
         // 服务器已经收到
@@ -329,7 +336,7 @@ void MainWindow::Get_upload_end(QDataStream *in)
     QString file_name;
     int count;
     *in>>file_name;
-    if(file_name == this->upload_file_path)
+    if(this->upload_file_path.endsWith(file_name))
     {
         *in>>count;
         if(count == this->upload_count)

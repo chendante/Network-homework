@@ -6,7 +6,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>614</width>
+    <width>692</width>
     <height>498</height>
    </rect>
   </property>
@@ -19,7 +19,7 @@
      <rect>
       <x>20</x>
       <y>60</y>
-      <width>271</width>
+      <width>351</width>
       <height>291</height>
      </rect>
     </property>
@@ -89,20 +89,10 @@
      <string>更改</string>
     </property>
    </widget>
-   <widget class="QTableView" name="tableView">
-    <property name="geometry">
-     <rect>
-      <x>340</x>
-      <y>60</y>
-      <width>256</width>
-      <height>291</height>
-     </rect>
-    </property>
-   </widget>
    <widget class="QLabel" name="label_3">
     <property name="geometry">
      <rect>
-      <x>390</x>
+      <x>450</x>
       <y>10</y>
       <width>141</width>
       <height>41</height>
@@ -117,13 +107,33 @@
      <string>当前用户列表</string>
     </property>
    </widget>
+   <widget class="QTableWidget" name="tableWidget">
+    <property name="geometry">
+     <rect>
+      <x>400</x>
+      <y>60</y>
+      <width>256</width>
+      <height>291</height>
+     </rect>
+    </property>
+    <column>
+     <property name="text">
+      <string>用户IP</string>
+     </property>
+    </column>
+    <column>
+     <property name="text">
+      <string>用户Port</string>
+     </property>
+    </column>
+   </widget>
   </widget>
   <widget class="QMenuBar" name="menuBar">
    <property name="geometry">
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>614</width>
+     <width>692</width>
      <height>26</height>
     </rect>
    </property>
