@@ -38,6 +38,8 @@ private slots:
     void Get_dir(QDataStream*);
     void Get_end(QDataStream*);
 
+    void Insert_record(QString);
+
 
     void on_pushButton_clicked();
 
@@ -66,7 +68,8 @@ private:
     int remote_port;
 
     // 定时器
-    QTimer *timer;
+    QTimer *download_timer;
+    QTimer *upload_timer;
 };
 
 #endif // MAINWINDOW_H

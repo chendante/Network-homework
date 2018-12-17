@@ -116,10 +116,7 @@ void MainWindow::SendFile(QString file_name, int want_count)
         qDebug()<<"wrong" ;
         return;
     }
-//    QByteArray data;
-//    QDataStream out(&data, QIODevice::WriteOnly);
-//    out<<QString("download file info")<<file_name<<file.size();
-//    g_UdpSocket.writeDatagram(data,QHostAddress::LocalHost,8080);
+
     int count=0;
     while(!file.atEnd()){
         QByteArray line;
