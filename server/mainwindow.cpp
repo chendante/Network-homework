@@ -176,3 +176,8 @@ QString MainWindow::GetFilePath()
 {
     return this->ui->lineEdit->text();
 }
+
+void MainWindow::InsertRecord(QString record)
+{
+
+}

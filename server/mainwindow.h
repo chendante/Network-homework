@@ -23,6 +23,7 @@ public:
     ~MainWindow();
     void SendFile(QString file_name, int want_count);
     QString GetFilePath();
+    void InsertRecord(QString);
 
 private slots:
     void SendMessage();
