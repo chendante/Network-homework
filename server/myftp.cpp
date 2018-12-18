@@ -119,13 +119,13 @@ void myftp::ReceiveFile(QDataStream *in)
             QByteArray datagram;
             *in>>datagram;
             this->receiver_file_data.append(datagram.data());
-            // 发送已经收到的请求
-            QByteArray data;
-            QDataStream out(&data, QIODevice::WriteOnly);
-            out<<QString("upload file receive")<<receiver_file_name<<receiver_count-1;
-            this->SendMessage(data);
         }
     }
+    // 发送已经收到的请求
+    QByteArray data;
+    QDataStream out(&data, QIODevice::WriteOnly);
+    out<<QString("upload file receive")<<receiver_file_name<<receiver_count-1;
+    this->SendMessage(data);
 }
 
 void myftp::ReceiveEnd(QDataStream *in)
