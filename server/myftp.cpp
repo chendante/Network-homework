@@ -80,7 +80,7 @@ void myftp::SendFile(QString file_name, int want_count)
     while(!file.atEnd()){
         QByteArray line;
         QDataStream out3(&line, QIODevice::WriteOnly);
-        out3<<QString("download file data")<<file_name<<count<<file.read(4000);
+        out3<<QString("download file data")<<file_name<<count<<file.read(1000);
 
         if(count>=want_count)
         {
@@ -97,13 +97,13 @@ void myftp::SendFile(QString file_name, int want_count)
     this->SendMessage(data2);
 }
 
+// 接收文件
 void myftp::ReceiveFile(QDataStream *in)
 {
     QString file_name;
     *in>>file_name;
     int count;
     *in>>count;
-    qDebug()<<count<<endl;
     // 当是一个发送的开始时，对其进行初始化
     if(receiver_count == -1 && count == 0)
     {

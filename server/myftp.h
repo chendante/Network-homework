@@ -12,6 +12,7 @@ public:
     // 判断是否时当前客户
     bool Is_equal(QHostAddress,int);
 
+    // 发送数据
     void SendMessage(QByteArray data);
     // 发送目录
     void SendDir();

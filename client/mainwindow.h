@@ -26,28 +26,40 @@ public:
     ~MainWindow();
 
 private slots:
+// 接收UDP数据，并判断命令类型，所有UDP报文都会经过这个函数
     void GetMessage();
-    void SendMessage(QString);
 
+// 与用户界面交互的函数
+    // 点击获取文件目录按钮
     void on_pushButton_2_clicked();
-
+    // 列表某行被双击，询问是否下载
     void on_tableWidget_cellDoubleClicked(int row, int column);
-    void Download_file();
-
-    void Upload_file();
-
-    void Get_data(QDataStream*);
-    void Get_dir(QDataStream*);
-    void Get_download_end(QDataStream*);
-    void Get_receive(QDataStream*);
-    void Get_upload_end(QDataStream*);
-
+    // 按下建立连接按钮
+    void on_pushButton_clicked();
+    // 上传文件按钮
+    void on_pushButton_3_clicked();
+    // 向屏幕添加新记录
     void Insert_record(QString);
 
+// 以下为向服务器发送命令的函数
+    // 向服务器发送指令
+    void SendMessage(QString);
+    // 发送下载文件请求
+    void Download_file();
+    // 发送上传文件请求
+    void Upload_file();
 
-    void on_pushButton_clicked();
-
-    void on_pushButton_3_clicked();
+// 以下为接受到服务端命令后调用的函数
+    // 用于获取数据的方法
+    void Get_data(QDataStream*);
+    // 用于获取目录的方法
+    void Get_dir(QDataStream*);
+    // 用于处理接收到下载结束请求
+    void Get_download_end(QDataStream*);
+    // 接收到上传回复
+    void Get_receive(QDataStream*);
+    // 收到上传文件接收完毕请求
+    void Get_upload_end(QDataStream*);
 
 private:
     Ui::MainWindow *ui;

@@ -41,14 +41,18 @@ void MainWindow::GetMessage()
     QString command;
     QDataStream in(&data,QIODevice::ReadOnly);
     in>>command;
+
+    // 新链接请求命令
     if(command == "new connect")
     {
         this->new_connect(ip, port);
     }
+    // 请求文件目录命令
     else if(command == "get dir")
     {
         this->get_dir(ip,port);
     }
+    // 下载文件命令
     else if(command == "download file")
     {
         int i;
@@ -56,13 +60,14 @@ void MainWindow::GetMessage()
         in>>file_name>>i;
         this->download_file(ip,port,file_name,i);
     }
+    // 上传文件数据命令
     else if (command == "upload file data") {
         this->upload_file_data(ip,port,&in);
     }
+    // 上传文件结束命令
     else if (command == "upload file end") {
         this->upload_file_end(ip,port,&in);
     }
-    qDebug()<<command;
     this->InsertRecord(ip.toString()+":"+QString::number(port)+"  "+command);
 }
 
@@ -71,36 +76,6 @@ void MainWindow::on_pushButton_clicked()
 {
     QString dir_url = QFileDialog::getExistingDirectory();
     this->ui->lineEdit->setText(dir_url);
-}
-
-// 发送文件
-void MainWindow::SendFile(QString file_name, int want_count)
-{
-    QString file_path = this->ui->lineEdit->text()+file_name;
-    QFile file;
-    file.setFileName(file_path);
-    if(!file.open(QIODevice::ReadOnly)){
-        qDebug()<<"wrong" ;
-        return;
-    }
-
-    int count=0;
-    while(!file.atEnd()){
-        QByteArray line;
-        QDataStream out3(&line, QIODevice::WriteOnly);
-        out3<<QString("download file data")<<file_name<<count<<file.read(4000);
-
-        if(count>=want_count)
-        {
-            UdpSocket.writeDatagram(line,QHostAddress::LocalHost,8080);
-            return;
-        }
-        count++;
-    }
-    QByteArray data2;
-    QDataStream out2(&data2, QIODevice::WriteOnly);
-    out2<<QString("download file end")<<file_name<<count;
-    UdpSocket.writeDatagram(data2,QHostAddress::LocalHost,8080);
 }
 
 // 新连接
@@ -127,7 +102,7 @@ void MainWindow::new_connect(QHostAddress ip,int port)
     out<<QString("connect success");
     new_one->SendMessage(data);
 
-    // 向列表添加新用户
+    // 向屏幕列表添加新用户
     qDebug()<<ui->tableWidget->rowCount()<<endl;
     ui->tableWidget->setRowCount(ui->tableWidget->rowCount()+1);
     qDebug()<<ui->tableWidget->rowCount()<<endl;
@@ -153,6 +128,7 @@ void MainWindow::InsertRecord(QString record)
     this->ui->textEdit->append(record);
 }
 
+// 获取目录
 void MainWindow::get_dir(QHostAddress ip, int port)
 {
     QByteArray data;
@@ -173,6 +149,7 @@ void MainWindow::get_dir(QHostAddress ip, int port)
     UdpSocket.writeDatagram(data,ip,port);
 }
 
+// 文件下载
 void MainWindow::download_file(QHostAddress ip, int port, QString file_name, int want_count)
 {
 
@@ -191,10 +168,11 @@ void MainWindow::download_file(QHostAddress ip, int port, QString file_name, int
     // 发送错误信息
     QByteArray data;
     QDataStream out(&data, QIODevice::WriteOnly);
-    out<<QString("error")<<QString("already connect");
+    out<<QString("error")<<QString("have not connect");
     UdpSocket.writeDatagram(data,ip,port);
 }
 
+// 文件数据上传
 void MainWindow::upload_file_data(QHostAddress ip, int port, QDataStream *in)
 {
 
@@ -213,10 +191,11 @@ void MainWindow::upload_file_data(QHostAddress ip, int port, QDataStream *in)
     // 发送错误信息
     QByteArray data;
     QDataStream out(&data, QIODevice::WriteOnly);
-    out<<QString("error")<<QString("already connect");
+    out<<QString("error")<<QString("have not connect");
     UdpSocket.writeDatagram(data,ip,port);
 }
 
+// 文件上传结束
 void MainWindow::upload_file_end(QHostAddress ip, int port, QDataStream *in)
 {
     for(int i=0;i<this->client_list.size();i++)
@@ -234,6 +213,6 @@ void MainWindow::upload_file_end(QHostAddress ip, int port, QDataStream *in)
     // 发送错误信息
     QByteArray data;
     QDataStream out(&data, QIODevice::WriteOnly);
-    out<<QString("error")<<QString("already connect");
+    out<<QString("error")<<QString("have not connect");
     UdpSocket.writeDatagram(data,ip,port);
 }

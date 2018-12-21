@@ -58,10 +58,12 @@ MainWindow::~MainWindow()
     delete ui;
 }
 
+// 接受UDP数据，并判断命令类型
 void MainWindow::GetMessage()
 {
     QByteArray data;
 
+    // 将二进制数据包结构大小设置为UDP包的大小
     data.resize(UdpSocket.pendingDatagramSize());
     UdpSocket.readDatagram(data.data(), data.size());
 
@@ -69,32 +71,39 @@ void MainWindow::GetMessage()
     QDataStream in(&data,QIODevice::ReadOnly);
     in>>command;
 
-    //根据命令不同，选用不同函数进行处理
+    // 根据命令不同，选用不同函数进行处理
+    // 连接成功命令
     if(command == "connect success")
     {
         QMessageBox::information(this,tr("提示"),tr("连接建立成功"));
     }
+    // 发送文件目录命令
     else if (command == "send dir")
     {
         this->Get_dir(&in);
     }
+    // 下载文件数据命令
     else if(command == "download file data")
     {
         this->Get_data(&in);
     }
+    // 下载文件结束命令
     else if(command == "download file end")
     {
         this->Get_download_end(&in);
     }
+    // 上传文件接收成功命令
     else if(command == "upload file receive")
     {
         qDebug()<<command<<endl;
         this->Get_receive(&in);
     }
+    // 上传文件接收完毕命令
     else if(command == "upload file end")
     {
         this->Get_upload_end(&in);
     }
+    // 出现错误命令
     else if(command == "error")
     {
         QString error_message;
@@ -102,6 +111,7 @@ void MainWindow::GetMessage()
         this->Insert_record(command+" "+error_message);
         return;
     }
+    // 将接收到的命令显示在屏幕
     this->Insert_record(command);
 }
 
@@ -111,11 +121,11 @@ void MainWindow::SendMessage(QString command)
     QByteArray data;
     QDataStream out(&data, QIODevice::WriteOnly);
 
-    qDebug()<<command;
     out<<command;
     UdpSocket.writeDatagram(data,remote_host,remote_port);
 }
 
+// 点击获取文件目录按钮
 void MainWindow::on_pushButton_2_clicked()
 {
     this->SendMessage("get dir");
@@ -129,7 +139,9 @@ void MainWindow::on_tableWidget_cellDoubleClicked(int row, int column)
                 QMessageBox::Ok|QMessageBox::Cancel,QMessageBox::Ok))
     {
     case QMessageBox::Ok:
+        // 判断是否有文件正在执行
         if(this->download_count == -1){
+            // 下载文件初始化
             this->download_file_data.clear();
             this->download_file_name = file_name;
             this->download_count = 0;
@@ -147,11 +159,12 @@ void MainWindow::on_tableWidget_cellDoubleClicked(int row, int column)
     }
 }
 
-//发送下载文件请求
+// 发送下载文件请求
 void MainWindow::Download_file()
 {
     QByteArray data;
     QDataStream out(&data, QIODevice::WriteOnly);
+    // 数据报中除了命令，还包含文件名和请求的文件片编号
     out<<QString("download file")<<download_file_name<<this->download_count;
     UdpSocket.writeDatagram(data,remote_host, remote_port);
 
@@ -230,6 +243,7 @@ void MainWindow::Get_download_end(QDataStream* in)
         {
             // 下载结束保存文件
             QFile file(this->download_file_name);
+            file.resize(0);
             if(!file.open(QIODevice::WriteOnly)) return;
             file.write(this->download_file_data.data(),download_file_data.size());
             file.close();
@@ -299,6 +313,7 @@ void MainWindow::Upload_file()
         }
         count++;
     }
+    file.close();
 
     // 当上面没有return，说明所有数据已经发送完成，下面发送end请求
     QByteArray data2;
